@@ -1,4 +1,6 @@
 load("@org_pubref_rules_node//node:rules.bzl", "node_binary")
+load("@io_bazel_rules_webtesting//web:web.bzl", "web_test_suite")
+
 
 def protractor_test_suite(name,
 													srcs,
@@ -45,13 +47,28 @@ def protractor_test_suite(name,
     visibility: Label List; optional.
     local: Boolean; optional.
 		"""
-	native.sh_test(
+	web_test_suite(
 		name = name,
+		test = "%s_test" % name,
+		browsers = browsers,
+	)
+
+	native.sh_test(
+		name = "%s_test" % name,
 		srcs = ["%s_runner" % name],
+    args = [
+        "$(location %s)" % configuration,
+    ],
+    data = [
+        configuration
+    ],
 	)
 
 	node_binary(
 		name = "%s_runner" % name,
-		main = "//protractor:main.js",
+		main = Label("//protractor:main.js"),
+    modules = [
+        "@npm_protractor//:modules",
+    ],
 	)	
 
